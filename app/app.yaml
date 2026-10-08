@@ -1,0 +1,32 @@
+command:
+  - "python"
+  - "-m"
+  - "uvicorn"
+  - "app:app"
+  - "--host"
+  - "0.0.0.0"
+  - "--port"
+  - "8000"
+
+env:
+  # SQL warehouse (attached as a resource -> grants the SP CAN_USE)
+  - name: "DATABRICKS_WAREHOUSE_ID"
+    valueFrom: "sql-warehouse"
+  # MAS serving endpoint (attached as a resource -> grants the SP CAN_QUERY)
+  - name: "SERVING_ENDPOINT"
+    valueFrom: "serving-endpoint"
+  # Data location -- set these to YOUR catalog/schema
+  - name: "TELCOABC_CATALOG"
+    value: "<catalog>"
+  - name: "TELCOABC_SCHEMA"
+    value: "telcoabc_retention"
+  # Lakebase connection (user token used for auth at request time).
+  # Set PGHOST to your Lakebase instance host and PGDATABASE to your database name.
+  - name: "PGHOST"
+    value: "<lakebase-host>"
+  - name: "PGPORT"
+    value: "5432"
+  - name: "PGDATABASE"
+    value: "<lakebase-db>"
+  - name: "PGSSLMODE"
+    value: "require"

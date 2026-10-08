@@ -1,0 +1,86 @@
+{
+  "version": 2,
+  "config": {
+    "sample_questions": [
+      {"id": "10000000000000000000000000000001", "question": ["What is our current monthly churn rate and how does it compare to the baseline?"]},
+      {"id": "10000000000000000000000000000002", "question": ["Which competitor is mentioned most often on retention calls?"]},
+      {"id": "10000000000000000000000000000003", "question": ["How many Critical-tier customers do we have and what is their average churn risk score?"]},
+      {"id": "10000000000000000000000000000004", "question": ["Which agents need coaching based on save rate?"]},
+      {"id": "10000000000000000000000000000005", "question": ["What are the most common call topics and which have the lowest save rate?"]},
+      {"id": "10000000000000000000000000000006", "question": ["What is the save rate for the TelcoABC One Bundle against T-Mobile Home Internet?"]}
+    ]
+  },
+  "data_sources": {
+    "tables": [
+      {"identifier": "<CATALOG>.telcoabc_retention.gold_agent_performance"},
+      {"identifier": "<CATALOG>.telcoabc_retention.gold_call_interactions"},
+      {"identifier": "<CATALOG>.telcoabc_retention.gold_call_topics"},
+      {"identifier": "<CATALOG>.telcoabc_retention.gold_churn_metrics"},
+      {"identifier": "<CATALOG>.telcoabc_retention.gold_churn_risk_scores"},
+      {"identifier": "<CATALOG>.telcoabc_retention.gold_retention_offers"}
+    ]
+  },
+  "instructions": {
+    "example_question_sqls": [
+      {
+        "id": "20000000000000000000000000000001",
+        "question": ["What is our current monthly churn rate versus baseline?"],
+        "sql": [
+          "SELECT MIN(churn_rate_pct) AS baseline_pct, MAX(churn_rate_pct) AS peak_pct\n",
+          "FROM <CATALOG>.telcoabc_retention.gold_churn_metrics"
+        ]
+      },
+      {
+        "id": "20000000000000000000000000000002",
+        "question": ["Which competitor is mentioned most on calls?"],
+        "sql": [
+          "SELECT competitor_name, COUNT(*) AS mentions,\n",
+          "  ROUND(100.0*COUNT(*)/SUM(COUNT(*)) OVER (),1) AS pct\n",
+          "FROM <CATALOG>.telcoabc_retention.gold_call_interactions\n",
+          "WHERE competitor_mentioned = true\n",
+          "GROUP BY competitor_name ORDER BY mentions DESC"
+        ]
+      },
+      {
+        "id": "20000000000000000000000000000003",
+        "question": ["How many Critical-tier customers and their average score?"],
+        "sql": [
+          "SELECT COUNT(*) AS critical_customers, ROUND(AVG(churn_score),3) AS avg_score\n",
+          "FROM <CATALOG>.telcoabc_retention.gold_churn_risk_scores\n",
+          "WHERE risk_tier = 'Critical'"
+        ]
+      },
+      {
+        "id": "20000000000000000000000000000004",
+        "question": ["Which agents need coaching?"],
+        "sql": [
+          "SELECT agent_name, team, tier, save_rate, avg_handle_time_min, offer_conversion_rate\n",
+          "FROM <CATALOG>.telcoabc_retention.gold_agent_performance\n",
+          "WHERE tier IN ('Needs Coaching','At Risk')\n",
+          "ORDER BY save_rate ASC LIMIT 20"
+        ]
+      },
+      {
+        "id": "20000000000000000000000000000005",
+        "question": ["Best offer against T-Mobile Home Internet?"],
+        "sql": [
+          "SELECT offer_name, save_rate, times_presented\n",
+          "FROM <CATALOG>.telcoabc_retention.gold_retention_offers\n",
+          "WHERE competitor_name = 'T-Mobile Home Internet'\n",
+          "ORDER BY save_rate DESC"
+        ]
+      }
+    ],
+    "text_instructions": [
+      {
+        "id": "30000000000000000000000000000001",
+        "content": [
+          "You are the analytics agent for the TelcoABC Retention Command Center. You answer questions about customer churn, retention-call outcomes, competitor pressure, agent coaching, and retention-offer effectiveness for TelcoABC.\n",
+          "Table guide: gold_churn_metrics = daily KPI trend (churn_rate_pct, competitor_mention_rate, save_rate) - use for 'trend', 'spike', 'baseline vs peak' questions. gold_call_interactions = one row per retention call (competitor_mentioned, competitor_name, call_topic, outcome, is_saved, offer_presented, agent) - use for volume, topic, and competitor-share questions. gold_churn_risk_scores = one row per customer (churn_score, risk_tier, recommended_offer_id) - use for at-risk counts and Critical-tier analysis; risk tiers are Critical (>=0.55), High, Medium, Low. gold_agent_performance = one row per agent (save_rate, tier, avg_handle_time_min, offer_conversion_rate, save_rate_rank) - use for coaching questions; tiers are Top Performer, On Target, Needs Coaching, At Risk. gold_retention_offers = offer effectiveness by competitor (save_rate, times_presented). gold_call_topics = call volume and save rate by topic.\n",
+          "Business context: baseline monthly churn is ~1.8%, peaked ~2.4% during the recent competitor surge. Competitor mention rate rose from ~28% to ~58%. The TelcoABC One Bundle is the strongest counter-offer to T-Mobile Home Internet.\n",
+          "When asked about 'coaching' or 'underperformers', focus on agents in the Needs Coaching and At Risk tiers. When asked about 'the spike' or 'recent surge', reference the peak in gold_churn_metrics. Always present rates as percentages rounded to one decimal."
+        ]
+      }
+    ]
+  }
+}

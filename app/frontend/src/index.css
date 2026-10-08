@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background:
+    radial-gradient(1200px 600px at 15% -10%, rgba(0, 153, 216, 0.14), transparent 60%),
+    radial-gradient(1000px 500px at 100% 0%, rgba(52, 195, 240, 0.08), transparent 55%),
+    #050f1d;
+  color: #e6eef7;
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl bg-navy-850/80 border border-white/5 shadow-card backdrop-blur-sm;
+  }
+  .card-hd {
+    @apply text-sm font-semibold text-slate-300 tracking-wide;
+  }
+}
+
+/* Markdown rendering for chat */
+.md h1,
+.md h2,
+.md h3 {
+  font-weight: 700;
+  color: #eaf3fb;
+  margin: 0.6em 0 0.35em;
+}
+.md h1 { font-size: 1.25rem; }
+.md h2 { font-size: 1.1rem; }
+.md h3 { font-size: 1rem; }
+.md p { margin: 0.4em 0; line-height: 1.6; }
+.md ul,
+.md ol { margin: 0.4em 0 0.4em 1.2em; }
+.md ul { list-style: disc; }
+.md ol { list-style: decimal; }
+.md li { margin: 0.2em 0; line-height: 1.55; }
+.md strong { color: #eaf3fb; font-weight: 600; }
+.md code {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+.md a { color: #34c3f0; text-decoration: underline; }
+.md table {
+  border-collapse: collapse;
+  margin: 0.6em 0;
+  width: 100%;
+  font-size: 0.85rem;
+}
+.md th,
+.md td {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 0.35em 0.6em;
+  text-align: left;
+}
+.md th { background: rgba(0, 153, 216, 0.15); }
+
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.09) 37%, rgba(255,255,255,0.04) 63%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite linear;
+}

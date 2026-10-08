@@ -1,0 +1,88 @@
+# TelcoABC Retention Command Center — Databricks Asset Bundle
+# Reproducible deploy of the pipeline + notebook (data, dashboard, agent bricks, and app
+# are documented in README; the bundle captures the reproducible compute resources).
+bundle:
+  name: telcoabc-retention-command-center
+
+# ---------------------------------------------------------------------------
+# Fill these in for YOUR workspace. Either edit the defaults below, or override
+# at deploy time:  databricks bundle deploy --var "catalog=my_cat,warehouse_id=abc123"
+# and set the workspace host via your CLI profile (recommended) or the host below.
+# See .env.example and README.md.
+# ---------------------------------------------------------------------------
+variables:
+  catalog:
+    description: Target Unity Catalog
+    default: main                       # <-- set to your catalog
+  schema:
+    description: Target schema
+    default: telcoabc_retention
+  warehouse_id:
+    description: SQL warehouse for the Genie space and dashboard
+    default: "<warehouse_id>"           # <-- set to your SQL warehouse id
+  mas_endpoint_name:
+    description: Name of the deployed Multi-Agent Supervisor serving endpoint
+    default: "<mas_endpoint_name>"      # <-- set after you create the MAS
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      # Prefer selecting the workspace via your CLI profile (`-p <profile>`).
+      # If you set a host here, use your own workspace URL.
+      host: https://<your-workspace-host>
+      root_path: /Workspace/Users/${workspace.current_user.userName}/telcoabc_retention_bundle
+
+resources:
+  pipelines:
+    telcoabc_retention_pipeline:
+      name: telcoabc_retention_pipeline
+      catalog: ${var.catalog}
+      schema: ${var.schema}
+      serverless: true
+      development: true
+      continuous: false
+      libraries:
+        - glob:
+            include: pipeline/transformations/**
+
+  jobs:
+    telcoabc_retention_refresh:
+      name: telcoabc_retention_refresh
+      tasks:
+        - task_key: run_pipeline
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.telcoabc_retention_pipeline.id}
+        # ML churn scoring — runs on serverless, in-workspace, after the pipeline
+        # refreshes bronze/gold. Writes <catalog>.<schema>.gold_churn_risk_scores.
+        - task_key: score_churn
+          depends_on:
+            - task_key: run_pipeline
+          spark_python_task:
+            python_file: data_generation/train_churn_model.py
+          environment_key: churn_ml
+      environments:
+        - environment_key: churn_ml
+          spec:
+            client: "3"
+            dependencies:
+              - scikit-learn
+
+  apps:
+    telcoabc_retention:
+      name: telcoabc-retention
+      description: "TelcoABC Retention Command Center — 4-tab app (Executive, AI Assistant, Competitor Intelligence, Agent Coaching)"
+      source_code_path: ./app
+      # Attaching these resources grants the app's service principal the listed
+      # permission. The `name:` of each MUST match the `valueFrom:` in app/app.yaml,
+      # otherwise the env var is unset AND the SP is never granted access (403 on query).
+      resources:
+        - name: "serving-endpoint"
+          serving_endpoint:
+            name: ${var.mas_endpoint_name}
+            permission: CAN_QUERY
+        - name: "sql-warehouse"
+          sql_warehouse:
+            id: ${var.warehouse_id}
+            permission: CAN_USE

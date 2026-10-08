@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.venv-local/
+venv/
+*.egg-info/
+build/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# MLflow / local runs
+mlflow.db
+mlruns/
+.mlflow/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Secrets / local config
+.env
+.env.local
+
+# Databricks local state
+.databricks/
+
+# Keep the built frontend (needed for app deploy)
+!app/frontend/dist/

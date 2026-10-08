@@ -1,0 +1,87 @@
+%%{init: {
+  "flowchart": {
+    "defaultRenderer": "elk",
+    "rankSpacing": 85,
+    "nodeSpacing": 50,
+    "padding": 22
+  },
+  "themeVariables": {
+    "fontSize": "14px",
+    "fontFamily": "\"Segoe UI\", Arial, sans-serif",
+    "lineColor": "#475569",
+    "clusterBkg": "#f8fafc",
+    "clusterBorder": "#cbd5e1",
+    "edgeLabelBackground": "#ffffff"
+  },
+  "theme": "default"
+}}%%
+flowchart LR
+
+    classDef src     fill:#dbeafe,stroke:#1d4ed8,stroke-width:2px,color:#1e3a8a
+    classDef vol     fill:#d1fae5,stroke:#059669,stroke-width:2px,color:#064e3b
+    classDef bronze  fill:#fef3c7,stroke:#d97706,stroke-width:2.5px,color:#78350f
+    classDef gold    fill:#fef9c3,stroke:#b45309,stroke-width:2.5px,color:#713f12
+    classDef ml      fill:#dcfce7,stroke:#15803d,stroke-width:2px,color:#14532d
+    classDef agent   fill:#f3e8ff,stroke:#9333ea,stroke-width:2px,color:#4c1d95
+    classDef mas     fill:#ede9fe,stroke:#7c3aed,stroke-width:2.5px,color:#2e1065
+    classDef serving fill:#eff6ff,stroke:#2563eb,stroke-width:2px,color:#1e3a8a
+    classDef db      fill:#d1fae5,stroke:#059669,stroke-width:2px,color:#064e3b
+
+    %% ── TITLE ──────────────────────────────────────────────────────
+    TITLE(["Spectrum Retention Command Center — Architecture"])
+    style TITLE fill:#ffffff,stroke:#ffffff,color:#0f172a,font-size:18px,font-weight:bold
+
+    %% ── STAGE 1 ─────────────────────────────────────────────────────
+    subgraph SRC["INGESTION"]
+        SDG["Synthetic Data Generator  (Python + Faker)"]:::src
+        VOL[("UC Volume  ·  raw JSON landing")]:::vol
+    end
+
+    %% ── STAGE 2: outer = UC governance frame, inner = pipeline ──────
+    subgraph UC_GOV["Unity Catalog — Governance · Lineage · Access Control"]
+        subgraph MED["MEDALLION PIPELINE"]
+            BRZ["BRONZE — Auto Loader\n6 Streaming Tables\ncustomer · calls · agents\nevents · competitor · offers"]:::bronze
+            GLD["GOLD — Materialized Views\n6 Curated Tables\ncall_interactions · agent_performance\nretention_offers · call_topics\nchurn_metrics · churn_risk_scores"]:::gold
+        end
+    end
+
+    %% ── ML BRANCH ───────────────────────────────────────────────────
+    subgraph ML_L["MLFLOW"]
+        MLMOD["Churn Model  (Gradient Boosted Trees · AUC 0.89)"]:::ml
+        CSCORE["gold_churn_risk_scores  ·  6,380 high-risk customers"]:::gold
+    end
+
+    %% ── STAGE 3 ─────────────────────────────────────────────────────
+    subgraph AI_L["AGENT BRICKS"]
+        MAS["Multi-Agent Supervisor  (MAS)"]:::mas
+        GENIE["Genie Space\nCharter Retention Analytics  (NL to SQL)"]:::agent
+        KA["Knowledge Assistant\nCharter Retention Playbooks  (RAG)"]:::agent
+    end
+
+    %% ── STAGE 4 (rightmost) ─────────────────────────────────────────
+    subgraph SRV["SERVING"]
+        DASH["AI/BI Dashboard\nRetention Command Center"]:::serving
+        APP["Databricks App\nSpectrum Retention Command Center\n4 tabs: Executive · AI Assistant\nCompetitor Intel · Agent Coaching"]:::serving
+        LB[("Lakebase  ·  Postgres\nchat persistence")]:::db
+    end
+
+    %% ── EDGES ───────────────────────────────────────────────────────
+    TITLE ~~~ SRC
+
+    SDG --> VOL
+    VOL -->|"ingest"| BRZ
+    BRZ -->|"Materialized Views"| GLD
+    BRZ -->|"train features"| MLMOD
+    MLMOD -->|"score"| CSCORE
+    CSCORE -.->|"enriches Gold"| GLD
+    GLD -->|"SQL context"| MAS
+    GLD -->|"SQL"| GENIE
+    GLD -->|"SQL"| DASH
+    GLD -->|"SQL"| APP
+    MAS -->|"routes"| GENIE
+    MAS -->|"routes"| KA
+    %% Flip direction so ELK ranks AGENT BRICKS before SERVING
+    MAS -->|"chat endpoint"| APP
+    %% Phantom ordering hint: DASH comes after the AGENT BRICKS tier
+    KA ~~~ DASH
+    APP <-->|"persist chat"| LB

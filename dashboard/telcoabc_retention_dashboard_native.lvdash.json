@@ -1,0 +1,836 @@
+{
+  "datasets": [
+    {
+      "name": "ds_kpi_churn",
+      "displayName": "ds_kpi_churn",
+      "queryLines": [
+        "SELECT ROUND(MAX(churn_rate_pct),2) AS churn_rate FROM <CATALOG>.telcoabc_retention.gold_churn_metrics "
+      ]
+    },
+    {
+      "name": "ds_kpi_cm",
+      "displayName": "ds_kpi_cm",
+      "queryLines": [
+        "SELECT ROUND(MAX(competitor_mention_rate)*100,1) AS competitor_mention_rate_pct FROM <CATALOG>.telcoabc_retention.gold_churn_metrics "
+      ]
+    },
+    {
+      "name": "ds_kpi_crit",
+      "displayName": "ds_kpi_crit",
+      "queryLines": [
+        "SELECT COUNT(*) AS critical_customers FROM <CATALOG>.telcoabc_retention.gold_churn_risk_scores WHERE risk_tier='Critical' "
+      ]
+    },
+    {
+      "name": "ds_kpi_save",
+      "displayName": "ds_kpi_save",
+      "queryLines": [
+        "SELECT ROUND(SUM(saves)/CAST(SUM(total_calls) AS DOUBLE)*100,1) AS overall_save_rate FROM <CATALOG>.telcoabc_retention.gold_churn_metrics "
+      ]
+    },
+    {
+      "name": "ds_trend",
+      "displayName": "ds_trend",
+      "queryLines": [
+        "SELECT call_date, churn_rate_pct, ROUND(competitor_mention_rate*100,1) AS competitor_mention_pct FROM <CATALOG>.telcoabc_retention.gold_churn_metrics ORDER BY call_date "
+      ]
+    },
+    {
+      "name": "ds_comp_share",
+      "displayName": "ds_comp_share",
+      "queryLines": [
+        "SELECT competitor_name, COUNT(*) AS mention_count FROM <CATALOG>.telcoabc_retention.gold_call_interactions WHERE competitor_mentioned=true GROUP BY competitor_name ORDER BY mention_count DESC "
+      ]
+    },
+    {
+      "name": "ds_topics",
+      "displayName": "ds_topics",
+      "queryLines": [
+        "SELECT call_topic, call_volume, ROUND(save_rate*100,1) AS save_rate_pct FROM <CATALOG>.telcoabc_retention.gold_call_topics ORDER BY call_volume DESC "
+      ]
+    },
+    {
+      "name": "ds_offers",
+      "displayName": "ds_offers",
+      "queryLines": [
+        "SELECT offer_name, ROUND(save_rate*100,1) AS save_rate_pct, times_presented, times_accepted FROM <CATALOG>.telcoabc_retention.gold_retention_offers ORDER BY save_rate DESC "
+      ]
+    },
+    {
+      "name": "ds_agents",
+      "displayName": "ds_agents",
+      "queryLines": [
+        "SELECT agent_name, ROUND(save_rate*100,1) AS save_rate_pct, avg_handle_time_min, tier FROM <CATALOG>.telcoabc_retention.gold_agent_performance ORDER BY save_rate DESC "
+      ]
+    },
+    {
+      "name": "ds_lowest",
+      "displayName": "ds_lowest",
+      "queryLines": [
+        "SELECT agent_name, team, tier, ROUND(save_rate*100,1) AS save_rate_pct, ROUND(avg_handle_time_min,1) AS avg_handle_time, ROUND(offer_conversion_rate*100,1) AS offer_conversion_pct FROM <CATALOG>.telcoabc_retention.gold_agent_performance ORDER BY save_rate ASC LIMIT 20 "
+      ]
+    },
+    {
+      "name": "ds_critical",
+      "displayName": "ds_critical",
+      "queryLines": [
+        "SELECT customer_id, market, plan_type, monthly_spend, ROUND(churn_score*100,1) AS churn_score_pct, recommended_offer_id, competitor_id FROM <CATALOG>.telcoabc_retention.gold_churn_risk_scores WHERE risk_tier='Critical' ORDER BY churn_score DESC LIMIT 200 "
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "retention-command-center",
+      "displayName": "TelcoABC Retention Command Center",
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1",
+      "layout": [
+        {
+          "widget": {
+            "name": "title",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## TelcoABC Retention Command Center"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi-churn",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_kpi_churn",
+                  "fields": [
+                    {
+                      "name": "churn_rate",
+                      "expression": "`churn_rate`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "churn_rate",
+                  "displayName": "Current Churn Rate",
+                  "format": {
+                    "type": "number",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    },
+                    "suffix": "%"
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Current Churn Rate"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi-cm",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_kpi_cm",
+                  "fields": [
+                    {
+                      "name": "competitor_mention_rate_pct",
+                      "expression": "`competitor_mention_rate_pct`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "competitor_mention_rate_pct",
+                  "displayName": "Competitor Mention Rate",
+                  "format": {
+                    "type": "number",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    },
+                    "suffix": "%"
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Competitor Mention Rate"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 2,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi-crit",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_kpi_crit",
+                  "fields": [
+                    {
+                      "name": "critical_customers",
+                      "expression": "`critical_customers`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "critical_customers",
+                  "displayName": "Critical-Tier Customers",
+                  "format": {
+                    "type": "number",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 0
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Critical-Tier Customers"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 2,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi-save",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_kpi_save",
+                  "fields": [
+                    {
+                      "name": "overall_save_rate",
+                      "expression": "`overall_save_rate`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "overall_save_rate",
+                  "displayName": "Overall Save Rate",
+                  "format": {
+                    "type": "number",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    },
+                    "suffix": "%"
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Overall Save Rate"
+              }
+            }
+          },
+          "position": {
+            "x": 9,
+            "y": 2,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "trend",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_trend",
+                  "fields": [
+                    {
+                      "name": "call_date",
+                      "expression": "`call_date`"
+                    },
+                    {
+                      "name": "churn_rate_pct",
+                      "expression": "`churn_rate_pct`"
+                    },
+                    {
+                      "name": "competitor_mention_pct",
+                      "expression": "`competitor_mention_pct`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "call_date",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "displayName": "Date"
+                },
+                "y": {
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "fields": [
+                    {
+                      "fieldName": "churn_rate_pct",
+                      "displayName": "Churn Rate %"
+                    },
+                    {
+                      "fieldName": "competitor_mention_pct",
+                      "displayName": "Competitor Mention %"
+                    }
+                  ]
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Churn Rate vs Competitor Mention Rate Trend"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 5,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "comp-share",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_comp_share",
+                  "fields": [
+                    {
+                      "name": "competitor_name",
+                      "expression": "`competitor_name`"
+                    },
+                    {
+                      "name": "mention_count",
+                      "expression": "`mention_count`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "mention_count",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Mentions"
+                },
+                "color": {
+                  "fieldName": "competitor_name",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Competitor Mention Share"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 5,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "topics",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_topics",
+                  "fields": [
+                    {
+                      "name": "call_topic",
+                      "expression": "`call_topic`"
+                    },
+                    {
+                      "name": "call_volume",
+                      "expression": "`call_volume`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "fields": [
+                    {
+                      "fieldName": "call_volume",
+                      "displayName": "Call Volume"
+                    }
+                  ]
+                },
+                "y": {
+                  "fieldName": "call_topic",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "value"
+                    }
+                  },
+                  "displayName": "Topic"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Call Topics by Volume"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 11,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "offers",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_offers",
+                  "fields": [
+                    {
+                      "name": "offer_name",
+                      "expression": "`offer_name`"
+                    },
+                    {
+                      "name": "save_rate_pct",
+                      "expression": "`save_rate_pct`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "fields": [
+                    {
+                      "fieldName": "save_rate_pct",
+                      "displayName": "Save Rate %"
+                    }
+                  ]
+                },
+                "y": {
+                  "fieldName": "offer_name",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "value"
+                    }
+                  },
+                  "displayName": "Offer"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Offer Effectiveness by Save Rate"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 11,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "agents",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_agents",
+                  "fields": [
+                    {
+                      "name": "agent_name",
+                      "expression": "`agent_name`"
+                    },
+                    {
+                      "name": "save_rate_pct",
+                      "expression": "`save_rate_pct`"
+                    },
+                    {
+                      "name": "avg_handle_time_min",
+                      "expression": "`avg_handle_time_min`"
+                    },
+                    {
+                      "name": "tier",
+                      "expression": "`tier`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "scatter",
+              "encodings": {
+                "x": {
+                  "fieldName": "avg_handle_time_min",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Avg Handle Time (min)"
+                },
+                "y": {
+                  "fieldName": "save_rate_pct",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Save Rate %"
+                },
+                "color": {
+                  "fieldName": "tier",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Agent Performance: Save Rate vs Handle Time"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 16,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "lowest-agents",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_lowest",
+                  "fields": [
+                    {
+                      "name": "agent_name",
+                      "expression": "`agent_name`"
+                    },
+                    {
+                      "name": "team",
+                      "expression": "`team`"
+                    },
+                    {
+                      "name": "tier",
+                      "expression": "`tier`"
+                    },
+                    {
+                      "name": "save_rate_pct",
+                      "expression": "`save_rate_pct`"
+                    },
+                    {
+                      "name": "avg_handle_time",
+                      "expression": "`avg_handle_time`"
+                    },
+                    {
+                      "name": "offer_conversion_pct",
+                      "expression": "`offer_conversion_pct`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "agent_name",
+                    "displayName": "Agent"
+                  },
+                  {
+                    "fieldName": "team",
+                    "displayName": "Team"
+                  },
+                  {
+                    "fieldName": "tier",
+                    "displayName": "Tier"
+                  },
+                  {
+                    "fieldName": "save_rate_pct",
+                    "displayName": "Save Rate %"
+                  },
+                  {
+                    "fieldName": "avg_handle_time",
+                    "displayName": "Avg Handle (min)"
+                  },
+                  {
+                    "fieldName": "offer_conversion_pct",
+                    "displayName": "Offer Conv %"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Lowest 20 Agents by Save Rate"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 16,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "critical-cust",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_critical",
+                  "fields": [
+                    {
+                      "name": "customer_id",
+                      "expression": "`customer_id`"
+                    },
+                    {
+                      "name": "market",
+                      "expression": "`market`"
+                    },
+                    {
+                      "name": "plan_type",
+                      "expression": "`plan_type`"
+                    },
+                    {
+                      "name": "monthly_spend",
+                      "expression": "`monthly_spend`"
+                    },
+                    {
+                      "name": "churn_score_pct",
+                      "expression": "`churn_score_pct`"
+                    },
+                    {
+                      "name": "recommended_offer_id",
+                      "expression": "`recommended_offer_id`"
+                    },
+                    {
+                      "name": "competitor_id",
+                      "expression": "`competitor_id`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "customer_id",
+                    "displayName": "Customer"
+                  },
+                  {
+                    "fieldName": "market",
+                    "displayName": "Market"
+                  },
+                  {
+                    "fieldName": "plan_type",
+                    "displayName": "Plan"
+                  },
+                  {
+                    "fieldName": "monthly_spend",
+                    "displayName": "Monthly Spend",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 2
+                      }
+                    }
+                  },
+                  {
+                    "fieldName": "churn_score_pct",
+                    "displayName": "Churn Score %"
+                  },
+                  {
+                    "fieldName": "recommended_offer_id",
+                    "displayName": "Rec. Offer"
+                  },
+                  {
+                    "fieldName": "competitor_id",
+                    "displayName": "Competitor"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Critical-Tier Customers at Risk (Top 200 by Score)"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 22,
+            "width": 8,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "roi",
+            "multilineTextboxSpec": {
+              "lines": [
+                "### ROI Business Case\n\n**TelcoABC One Counter-Offer Impact:**\n\n- Projected ROI: **5.3x**\n- Revenue Protected: **~$52M**\n- Offer Program Cost: $8.2M\n- Churn Reduction: 28%\n\n**Deployment Status:**\n\n- 6,380 Critical customers identified\n- T-Mobile/AT&T/Verizon competitive pressure detected\n- Competitor mention rate: 28% \u2192 58%\n- Baseline churn: 1.8% \u2192 2.4% (spike)\n\n**Next Steps:** Target Critical tier with personalized counter-offers to protect high-value accounts."
+              ]
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 22,
+            "width": 4,
+            "height": 7
+          }
+        }
+      ]
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "canvasBackgroundColor": {
+        "light": "#FCFCFC",
+        "dark": "#1F272D"
+      },
+      "widgetBackgroundColor": {
+        "light": "#FFFFFF",
+        "dark": "#11171C"
+      },
+      "fontColor": {
+        "light": "#11171C",
+        "dark": "#E8ECF0"
+      },
+      "selectionColor": {
+        "light": "#2272B4",
+        "dark": "#8ACAFF"
+      },
+      "visualizationColors": [
+        "#0072B2",
+        "#E69F00",
+        "#009E73",
+        "#CC79A7",
+        "#D55E00",
+        "#56B4E9",
+        "#F0E442"
+      ],
+      "widgetHeaderAlignment": "LEFT"
+    }
+  }
+}
