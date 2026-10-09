@@ -1,3 +1,5 @@
+> ⚠️ Illustrative sample only. Synthetic/fabricated data for demonstration purposes.
+
 # Retention Agent Coaching Guide
 
 ## The core coaching insight

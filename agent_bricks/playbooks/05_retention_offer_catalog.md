@@ -1,3 +1,5 @@
+> ⚠️ Illustrative sample only. Synthetic/fabricated data for demonstration purposes.
+
 # Retention Offer Catalog
 
 Seven approved retention offers, with historical save rates, cost to TelcoABC, and the customer profile each is best suited for. Match the offer to the customer's situation and the competitor they cite.

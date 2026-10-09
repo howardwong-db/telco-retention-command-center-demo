@@ -1,3 +1,5 @@
+> ⚠️ Illustrative sample only. Synthetic/fabricated data for demonstration. Not affiliated with, endorsed by, or representative of the named companies.
+
 # Competitor Playbook: T-Mobile Home Internet
 
 ## Overview

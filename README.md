@@ -4,6 +4,10 @@ A complete, reproducible Databricks demo for a telecom/cable **churn & retention
 
 > New here? Read **[docs/TALK_TRACK.md](docs/TALK_TRACK.md)** for the demo narrative and **[docs/PROMPTS.md](docs/PROMPTS.md)** for the AI prompts and the one-shot build prompt.
 
+## Disclaimer
+
+> **Disclaimer — demonstration asset.** All data in this project is synthetic and generated for illustration only. "TelcoABC" is a fictional company. Competitor names (e.g., T-Mobile, AT&T, Verizon, Frontier, Google Fiber) and the associated "playbooks" appear **solely for illustrative purposes** and do **not** represent, and are **not affiliated with or endorsed by**, those companies. Any stated "weaknesses," pricing, offers, or save-rate figures are **fabricated sample data**, not factual claims about any real company. This project is a demo and is **not intended for production use**.
+
 ## Architecture (7 layers)
 
 See `dashboard/architecture_diagram.png`.
@@ -107,3 +111,7 @@ sed -i '' "s/<CATALOG>/$TELCOABC_CATALOG/g" \
 
 - **[docs/TALK_TRACK.md](docs/TALK_TRACK.md)** — presenter guide: the hook, the 4-act demo flow, and live MAS questions.
 - **[docs/PROMPTS.md](docs/PROMPTS.md)** — the demo's AI prompts (Genie / KA / MAS / `ai_classify`) and the one-shot build prompt to regenerate or adapt the whole demo.
+
+## License
+
+Licensed under the Apache License 2.0 — see [LICENSE](LICENSE). Copyright 2026 Databricks, Inc.
